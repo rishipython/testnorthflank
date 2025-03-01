@@ -1,11 +1,17 @@
-FROM nvidia/cuda:12.2.0-runtime-ubuntu20.04
+# Use NVIDIA CUDA base image (runtime includes necessary libraries)
+FROM nvidia/cuda:12.2.0-devel-ubuntu20.04
 
+# Set the working directory inside the container
 WORKDIR /app
 
-# Install Python and dependencies
-RUN apt-get update && apt-get install -y python3 python3-pip && rm -rf /var/lib/apt/lists/*
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Install required dependencies
+RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
 
-COPY . .
-CMD ["python3", "main.py"]
+# Copy the CUDA source file into the container
+COPY kernel.cu .
+
+# Compile the CUDA program
+RUN nvcc -arch=sm_90 -o kernel kernel.cu
+
+# Run the compiled CUDA program when the container starts
+CMD ["./kernel"]
